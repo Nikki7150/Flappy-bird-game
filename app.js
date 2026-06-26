@@ -37,6 +37,9 @@ let isGameStarted = false;
 // message for player to start game
 let messageToPlayer;
 
+// Remove static columns variables, add a dynamic columns group and timer
+let columns;
+let columnTimer;
 
 // function to bring in images for our application, such as the background
 function preload() {
@@ -60,7 +63,7 @@ function create() {
     const roads = this.physics.add.staticGroup();
 
     // topColumns are static
-    const topColumns = this.physics.add.staticGroup({
+    /*const topColumns = this.physics.add.staticGroup({
         key: "column", 
         repeat: 1,
         setXY: { x: 200, y: 0, stepX: 300 },
@@ -71,9 +74,11 @@ function create() {
         key: "column", 
         repeat: 1,
         setXY: { x: 350, y: 400, stepX: 300 },
-    });
+    });*/
 
     const road = roads.create(400, 568, "road").setScale(2).refreshBody();
+
+    columns = this.physics.add.group();
 
     // has a dynamic body and will have gravity setting and will fall to the bottom of screen
     // has setBounce to specify that nird should bound slightly if it collides with something
@@ -87,11 +92,13 @@ function create() {
     this.physics.add.collider(bird, road);
 
     // make bird stop moving when hits a column
-    this.physics.add.overlap(bird, topColumns, () => (hasBumped = true), null, this);
+    /*this.physics.add.overlap(bird, topColumns, () => (hasBumped = true), null, this);
     this.physics.add.overlap(bird, bottomColumns, () => (hasBumped = true), null, this);
 
     this.physics.add.collider(bird, topColumns);
-    this.physics.add.collider(bird, bottomColumns);
+    this.physics.add.collider(bird, bottomColumns);*/
+
+    this.physics.add.collider(bird, columns, () => (hasBumped = true), null, this);
 
     // from phaser doc - create and return an object containing 4 hotkeys
     cursors = this.input.keyboard.createCursorKeys();
@@ -106,12 +113,44 @@ function create() {
     );
 
     Phaser.Display.Align.In.BottomCenter(messageToPlayer, background, 0, 50);
+
+    columnTimer = this.time.addEvent({
+        delay: 2000,
+        callback: spawnColumns,
+        callbackScope: this,
+        loop: true,
+        paused: true,
+    });
+}
+
+function spawnColumns() {
+    if (hasLanded || hasBumped) return;
+
+    const gap = 150; //. space bird flies through
+    const maxHeight = 50;
+    const minHeight = 350;
+
+    // random y for the gap center
+    const randomY = Phaser.Math.Between(maxHeight, minHeight); 
+
+    const topColumn = columns.create(850, randomY - gap / 2, 'column').setOrigin(0.5, 1);
+    const bottomColumn = columns.create(850, randomY + gap / 2, 'column').setOrigin(0.5, 0);
+
+    topColumn.body.setVelocityX(-200);
+    bottomColumn.body.setVelocityX(-200);
+
+    topColumn.body.setImmovable(true);
+    bottomColumn.body.setImmovable(true);
+
+    topColumn.body.allowGravity = false;
+    bottomColumn.body.allowGravity = false;
 }
 
 //  function will be used to update the "bird" object in the game.
 function update() {
     if(cursors.space.isDown && !isGameStarted) {
         isGameStarted = true;
+        columnTimer.paused = false;
         messageToPlayer.text = 'Instructions: Press the "^" button to stay upright\nAnd don\'t hit the columns or ground';
     }
 
@@ -130,6 +169,8 @@ function update() {
     }
 
     if(hasLanded || hasBumped) {
+        columnTimer.paused = true;
+        columns.setVelocityX(0);
         messageToPlayer.text = 'Oh no! You crashed!'
     }
 
@@ -137,4 +178,11 @@ function update() {
         bird.setVelocityY(40);
         messageToPlayer.text = 'Congrats! You won!'
     }
+
+    // Performance Cleanup: Clean up columns that left the screen
+    columns.children.iterate(function (column) {
+        if (column && column.x < -50) {
+            column.destroy();
+        }
+    });
 }
