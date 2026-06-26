@@ -41,6 +41,11 @@ let messageToPlayer;
 let columns;
 let columnTimer;
 
+// variable to keep track of score
+let score = 0;
+const targetScore = 1000; // distance to win the game
+let scoreText;
+
 // function to bring in images for our application, such as the background
 function preload() {
     this.load.image("background", "assets/background.png");
@@ -105,7 +110,7 @@ function create() {
 
     messageToPlayer = this.add.text(0, 0, `Instructions: Press Space Bar to start`,
         {
-            fontFamily: '"Comic Sans MS", Times, serif',
+            fontFamily: '"Silkscreen", sans-serif',
             fontSize: "20px",
             color: "white",
             backgroundColor: "black",
@@ -114,12 +119,21 @@ function create() {
 
     Phaser.Display.Align.In.BottomCenter(messageToPlayer, background, 0, 50);
 
+    // create a timer to spawn columns every 2 seconds, but start paused
     columnTimer = this.time.addEvent({
-        delay: 2000,
+        delay: 1500,
         callback: spawnColumns,
         callbackScope: this,
         loop: true,
         paused: true,
+    });
+
+    // create a text object to display the score
+    scoreText = this.add.text(580, 10, 'Score: 0 / ' + targetScore, {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "20px",
+        fill: "#000000",
+        padding: { x: 10, y: 5 },
     });
 }
 
@@ -144,6 +158,9 @@ function spawnColumns() {
 
     topColumn.body.allowGravity = false;
     bottomColumn.body.allowGravity = false;
+
+    this.children.bringToTop(messageToPlayer);
+    this.children.bringToTop(scoreText);
 }
 
 //  function will be used to update the "bird" object in the game.
@@ -151,32 +168,38 @@ function update() {
     if(cursors.space.isDown && !isGameStarted) {
         isGameStarted = true;
         columnTimer.paused = false;
-        messageToPlayer.text = 'Instructions: Press the "^" button to stay upright\nAnd don\'t hit the columns or ground';
+        messageToPlayer.text = 'Instructions: Press the "^" button to stay\n uprightAnd don\'t hit the columns or ground';
     }
 
     if(!isGameStarted) {
         bird.setVelocityY(-160);
     }
 
-    if(cursors.up.isDown && !hasLanded && !hasBumped) {
+    if(cursors.up.isDown && !hasLanded && !hasBumped && isGameStarted && score < targetScore) {
         bird.setVelocityY(-160);
     }
 
-    if(isGameStarted && (!hasLanded || !hasBumped)) {
-        bird.body.velocity.x = 50;
+    if(isGameStarted && !hasLanded && !hasBumped && score < targetScore) {
+        score += 1;
+        scoreText.text = 'Score: ' + score + ' / ' + targetScore;
+        bird.body.velocity.x = 30;
     } else {
         bird.body.velocity.x = 0;
+    }
+
+    if(score >= targetScore && !hasLanded && !hasBumped) {
+        columnTimer.paused = true;
+        columns.setVelocityX(0);
+        bird.setVelocityY(0);
+        // set gravity of bird to 0 so it doesn't fall down after winning
+        bird.body.setAllowGravity(false);
+        messageToPlayer.text = 'Congrats! You won!';
     }
 
     if(hasLanded || hasBumped) {
         columnTimer.paused = true;
         columns.setVelocityX(0);
-        messageToPlayer.text = 'Oh no! You crashed!'
-    }
-
-    if(bird.x > 750) {
-        bird.setVelocityY(40);
-        messageToPlayer.text = 'Congrats! You won!'
+        messageToPlayer.text = 'Oh no! You crashed!';
     }
 
     // Performance Cleanup: Clean up columns that left the screen
