@@ -18,6 +18,11 @@ let config = {
         create: create,
         update: update,
     },
+    font: {
+        family: '"Silkscreen", sans-serif',
+        size: 20,
+        color: "#ffffff",
+    },
 };
 
 // game variable of a new instance of Phaser.Game to set up game
@@ -50,7 +55,8 @@ let scoreText;
 function preload() {
     this.load.image("background", "assets/background.png");
     this.load.image("road", "assets/road.png");
-    this.load.image("column", "assets/column.png");
+    this.load.image("column-1", "assets/Column-1.png");
+    this.load.image("column-2", "assets/Column-2.png");
     this.load.spritesheet("bird", "assets/bird.png", {
         frameWidth: 64,
         frameHeight: 96,
@@ -62,7 +68,7 @@ function preload() {
 // function to generate elements that will appear in our game, such as images that were brought in from the preload() function
 function create() {
     // setOrigin() specifies that we want upper left corner of background to be positioned at (0, 0)
-    const background = this.add.image(0, 0, "background").setOrigin(0, 0);
+    const background = this.add.image(0, 0, "background").setOrigin(0, 0).setScale(.65);
 
     // this.physics makes a call to arcade physics system in phaser to allow physics simulation to roads 
     const roads = this.physics.add.staticGroup();
@@ -81,7 +87,11 @@ function create() {
         setXY: { x: 350, y: 400, stepX: 300 },
     });*/
 
-    const road = roads.create(400, 568, "road").setScale(2).refreshBody();
+    const road = this.add.image(400, 535, "road").setScale(0.45);
+
+    const ground = this.physics.add.staticImage(400, 530, null);
+    ground.setDisplaySize(800, 5).setAlpha(0);
+    ground.refreshBody();
 
     columns = this.physics.add.group();
 
@@ -92,9 +102,12 @@ function create() {
     bird.setBounce(0.2);
     bird.setCollideWorldBounds(true);
 
-    // set hasLanded to true when bird land on road
-    this.physics.add.overlap(bird, road, () => (hasLanded = true), null, this);
-    this.physics.add.collider(bird, road);
+    // set hasLanded to true when bird land on ground ( road is a decorative element )
+    // this.physics.add.overlap(bird, road, () => (hasLanded = true), null, this);
+    // this.physics.add.collider(bird, road);
+
+    this.physics.add.overlap(bird, ground, () => (hasLanded = true), null, this);
+    this.physics.add.collider(bird, ground);
 
     // make bird stop moving when hits a column
     /*this.physics.add.overlap(bird, topColumns, () => (hasBumped = true), null, this);
@@ -117,7 +130,7 @@ function create() {
         }
     );
 
-    Phaser.Display.Align.In.BottomCenter(messageToPlayer, background, 0, 50);
+    Phaser.Display.Align.In.BottomCenter(messageToPlayer, ground, 10, 10);
 
     // create a timer to spawn columns every 2 seconds, but start paused
     columnTimer = this.time.addEvent({
@@ -129,10 +142,10 @@ function create() {
     });
 
     // create a text object to display the score
-    scoreText = this.add.text(580, 10, 'Score: 0 / ' + targetScore, {
+    scoreText = this.add.text(540, 10, 'Score: 0 / ' + targetScore, {
         fontFamily: '"Silkscreen", sans-serif',
         fontSize: "20px",
-        fill: "#000000",
+        fill: "#ffffff",
         padding: { x: 10, y: 5 },
     });
 }
@@ -147,8 +160,8 @@ function spawnColumns() {
     // random y for the gap center
     const randomY = Phaser.Math.Between(maxHeight, minHeight); 
 
-    const topColumn = columns.create(850, randomY - gap / 2, 'column').setOrigin(0.5, 1);
-    const bottomColumn = columns.create(850, randomY + gap / 2, 'column').setOrigin(0.5, 0);
+    const topColumn = columns.create(850, randomY - gap / 2, 'column-2').setOrigin(0.5, 1).setScale(.3, .65);
+    const bottomColumn = columns.create(850, randomY + gap / 2, 'column-1').setOrigin(0.5, 0).setScale(.3, .65);
 
     topColumn.body.setVelocityX(-200);
     bottomColumn.body.setVelocityX(-200);
