@@ -18,12 +18,22 @@ let config = {
         create: create,
         update: update,
     },
-    font: {
-        family: '"Silkscreen", sans-serif',
-        size: 20,
-        color: "#ffffff",
-    },
 };
+
+// variable for menu scene
+let isMenuOpen = true;
+
+// variable for settings scene
+let isSettingsOpen = false;
+
+// variable for theme scene
+let isThemeOpen = false;
+
+// variable for gameOver / victory scene
+let isGameEndOpen = false;
+
+// determine if game win or lose
+let isGameWon = false;
 
 // game variable of a new instance of Phaser.Game to set up game
 let game = new Phaser.Game(config);
@@ -53,22 +63,47 @@ let scoreText;
 
 // function to bring in images for our application, such as the background
 function preload() {
+    this.load.image("woodBg", "assets/wood-bg.jpg");
+    this.load.image("menuBg", "assets/menu-bg.jpeg");
     this.load.image("background", "assets/background.png");
     this.load.image("road", "assets/road.png");
-    this.load.image("column-1", "assets/Column-1.png");
-    this.load.image("column-2", "assets/Column-2.png");
+    this.load.image("column", "assets/column.png");
     this.load.spritesheet("bird", "assets/bird.png", {
         frameWidth: 64,
         frameHeight: 96,
     });
 }
 
+function spawnColumns() {
+    if (hasLanded || hasBumped) return;
 
+    const gap = 150; //. space bird flies through
+    const maxHeight = 50;
+    const minHeight = 350;
+
+    // random y for the gap center
+    const randomY = Phaser.Math.Between(maxHeight, minHeight); 
+
+    const topColumn = columns.create(850, randomY - gap / 2, 'column').setOrigin(0.5, 1);
+    const bottomColumn = columns.create(850, randomY + gap / 2, 'column').setOrigin(0.5, 0);
+
+    topColumn.body.setVelocityX(-200);
+    bottomColumn.body.setVelocityX(-200);
+
+    topColumn.body.setImmovable(true);
+    bottomColumn.body.setImmovable(true);
+
+    topColumn.body.allowGravity = false;
+    bottomColumn.body.allowGravity = false;
+
+    this.children.bringToTop(messageToPlayer);
+    this.children.bringToTop(scoreText);
+}
 
 // function to generate elements that will appear in our game, such as images that were brought in from the preload() function
 function create() {
     // setOrigin() specifies that we want upper left corner of background to be positioned at (0, 0)
-    const background = this.add.image(0, 0, "background").setOrigin(0, 0).setScale(.65);
+    const background = this.add.image(0, 0, "background").setOrigin(0, 0);
 
     // this.physics makes a call to arcade physics system in phaser to allow physics simulation to roads 
     const roads = this.physics.add.staticGroup();
@@ -87,11 +122,7 @@ function create() {
         setXY: { x: 350, y: 400, stepX: 300 },
     });*/
 
-    const road = this.add.image(400, 535, "road").setScale(0.45);
-
-    const ground = this.physics.add.staticImage(400, 530, null);
-    ground.setDisplaySize(800, 5).setAlpha(0);
-    ground.refreshBody();
+    const road = roads.create(400, 568, "road").setScale(2).refreshBody();
 
     columns = this.physics.add.group();
 
@@ -102,12 +133,9 @@ function create() {
     bird.setBounce(0.2);
     bird.setCollideWorldBounds(true);
 
-    // set hasLanded to true when bird land on ground ( road is a decorative element )
-    // this.physics.add.overlap(bird, road, () => (hasLanded = true), null, this);
-    // this.physics.add.collider(bird, road);
-
-    this.physics.add.overlap(bird, ground, () => (hasLanded = true), null, this);
-    this.physics.add.collider(bird, ground);
+    // set hasLanded to true when bird land on road
+    this.physics.add.overlap(bird, road, () => (hasLanded = true), null, this);
+    this.physics.add.collider(bird, road);
 
     // make bird stop moving when hits a column
     /*this.physics.add.overlap(bird, topColumns, () => (hasBumped = true), null, this);
@@ -130,7 +158,7 @@ function create() {
         }
     );
 
-    Phaser.Display.Align.In.BottomCenter(messageToPlayer, ground, 10, 10);
+    Phaser.Display.Align.In.BottomCenter(messageToPlayer, background, 0, 50);
 
     // create a timer to spawn columns every 2 seconds, but start paused
     columnTimer = this.time.addEvent({
@@ -145,39 +173,70 @@ function create() {
     scoreText = this.add.text(540, 10, 'Score: 0 / ' + targetScore, {
         fontFamily: '"Silkscreen", sans-serif',
         fontSize: "20px",
-        fill: "#ffffff",
+        fill: "#000000",
         padding: { x: 10, y: 5 },
     });
+
+    // setting the menu scene
+    if (isMenuOpen) {
+        const menuOverlay = this.add.rectangle(0, 0, 800, 600, 0x000000, 0.5).setOrigin(0, 0);
+        const menuBg = this.add.image(0, 0, "menuBg").setOrigin(-0.3, -0.25).setDisplaySize(500, 400);
+        const menuTitle = this.add.text(400, 200, 'Feather Rush', {
+            fontFamily: '"Silkscreen", sans-serif',
+            fontSize: "40px",
+            fill: "#ffffff",
+            backgroundColor: "#000000",
+            padding: { x: 10, y: 5 },
+        }).setOrigin(0.5);
+
+        const newButton = this.add.text(400, 300, 'New Game', {
+            fontFamily: '"Silkscreen", sans-serif',
+            fontSize: "30px",
+            fill: "#ffffff",
+            backgroundColor: "#000000",
+            padding: { x: 10, y: 5 },
+            cursor: "pointer",
+        }).setOrigin(0.5).setInteractive();
+
+        const settingsBtn = this.add.text(400, 350, 'Settings', {
+            fontFamily: '"Silkscreen", sans-serif',
+            fontSize: "30px",
+            fill: "#ffffff",
+            backgroundColor: "#000000",
+            padding: { x: 10, y: 5 },
+            cursor: "pointer",
+        }).setOrigin(0.5).setInteractive();
+
+        const themeBtn = this.add.text(400, 400, 'Theme', {
+            fontFamily: '"Silkscreen", sans-serif',
+            fontSize: "30px",
+            fill: "#ffffff",
+            backgroundColor: "#000000",
+            padding: { x: 10, y: 5 },
+            cursor: "pointer",
+        }).setOrigin(0.5).setInteractive();
+
+        newButton.on('pointerdown', () => {
+            isMenuOpen = false;
+            menuOverlay.visible = false;
+            menuBg.visible = false;
+            menuTitle.visible = false;
+            newButton.visible = false;
+            settingsBtn.visible = false;
+            themeBtn.visible = false;
+        });
+    }
 }
 
-function spawnColumns() {
-    if (hasLanded || hasBumped) return;
 
-    const gap = 150; //. space bird flies through
-    const maxHeight = 50;
-    const minHeight = 350;
-
-    // random y for the gap center
-    const randomY = Phaser.Math.Between(maxHeight, minHeight); 
-
-    const topColumn = columns.create(850, randomY - gap / 2, 'column-2').setOrigin(0.5, 1).setScale(.3, .65);
-    const bottomColumn = columns.create(850, randomY + gap / 2, 'column-1').setOrigin(0.5, 0).setScale(.3, .65);
-
-    topColumn.body.setVelocityX(-200);
-    bottomColumn.body.setVelocityX(-200);
-
-    topColumn.body.setImmovable(true);
-    bottomColumn.body.setImmovable(true);
-
-    topColumn.body.allowGravity = false;
-    bottomColumn.body.allowGravity = false;
-
-    this.children.bringToTop(messageToPlayer);
-    this.children.bringToTop(scoreText);
-}
 
 //  function will be used to update the "bird" object in the game.
 function update() {
+
+    if (cursors.space.isDown && isMenuOpen) {
+        return;
+    }
+    
     if(cursors.space.isDown && !isGameStarted) {
         isGameStarted = true;
         columnTimer.paused = false;
@@ -206,13 +265,111 @@ function update() {
         bird.setVelocityY(0);
         // set gravity of bird to 0 so it doesn't fall down after winning
         bird.body.setAllowGravity(false);
+        isGameEndOpen = true;
+        isGameWon = true;
         messageToPlayer.text = 'Congrats! You won!';
     }
 
     if(hasLanded || hasBumped) {
         columnTimer.paused = true;
         columns.setVelocityX(0);
+        isGameWon = false;
+        isGameEndOpen = true;
         messageToPlayer.text = 'Oh no! You crashed!';
+    }
+
+    // change game end title based on win or lose
+    if (isGameEndOpen) {
+        const gameEndOverlay = this.add.rectangle(0, 0, 800, 600, 0x000000, 0.5).setOrigin(0, 0).setAlpha(0.2);
+        const gameEndBg = this.add.image(0, 0, "menuBg").setOrigin(-0.3, -0.25).setDisplaySize(500, 400);
+
+        const gameEndTitle = this.add.text(400, 200, isGameWon ? 'You Won!' : 'Game Over', {
+            fontFamily: '"Silkscreen", sans-serif',
+            fontSize: "40px",
+            fill: "#ffffff",
+            backgroundColor: "#000000",
+            padding: { x: 10, y: 5 },
+        }).setOrigin(0.5);
+
+        const playAgainButton = this.add.text(400, 300, 'Play Again', {
+            fontFamily: '"Silkscreen", sans-serif',
+            fontSize: "30px",
+            fill: "#ffffff",
+            backgroundColor: "#000000",
+            padding: { x: 10, y: 5 },
+            cursor: "pointer",
+        }).setOrigin(0.5).setInteractive();
+
+        const menuButton = this.add.text(400, 350, 'Main Menu', {
+            fontFamily: '"Silkscreen", sans-serif',
+            fontSize: "30px",
+            fill: "#ffffff",
+            backgroundColor: "#000000",
+            padding: { x: 10, y: 5 },
+            cursor: "pointer",
+        }).setOrigin(0.5).setInteractive();
+
+        menuButton.on('pointerdown', () => {
+            isGameEndOpen = false;
+            gameEndOverlay.visible = false;
+            gameEndTitle.visible = false;
+            playAgainButton.visible = false;
+            menuButton.visible = false;
+
+            // reset menu and settings state
+            isMenuOpen = true;
+            isSettingsOpen = false;
+            isThemeOpen = false;
+
+            // Reset game state
+            hasLanded = false;
+            hasBumped = false;
+            isGameStarted = false;
+            score = 0;
+            scoreText.text = 'Score: 0 / ' + targetScore;
+
+            // Reset bird position and velocity
+            bird.setPosition(0, 50);
+            bird.setVelocity(0, 0);
+            bird.body.setAllowGravity(true);
+
+            // Clear existing columns
+            columns.clear(true, true);
+
+            // Restart the column timer
+            columnTimer.paused = true;
+        });
+
+        playAgainButton.on('pointerdown', () => {
+            isGameEndOpen = false;
+            gameEndOverlay.visible = false;
+            gameEndTitle.visible = false;
+            playAgainButton.visible = false;
+            menuButton.visible = false;
+
+            // reset menu and settings state
+            isMenuOpen = true;
+            isSettingsOpen = false;
+            isThemeOpen = false;
+
+            // Reset game state
+            hasLanded = false;
+            hasBumped = false;
+            isGameStarted = false;
+            score = 0;
+            scoreText.text = 'Score: 0 / ' + targetScore;
+
+            // Reset bird position and velocity
+            bird.setPosition(0, 50);
+            bird.setVelocity(0, 0);
+            bird.body.setAllowGravity(true);
+
+            // Clear existing columns
+            columns.clear(true, true);
+
+            // Restart the column timer
+            columnTimer.paused = true;
+        });
     }
 
     // Performance Cleanup: Clean up columns that left the screen
