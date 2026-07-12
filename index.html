@@ -4,14 +4,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!--Phaser Library-->
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
-    <script src="app.js"></script>
     <!--Google fonts-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Twinkle+Star&display=swap" rel="stylesheet">
+    <!--hardcode font -->
+    <style>
+        body {
+            font-family: "Silkscreen", sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        #console-wrapper {
+          position: relative;
+          width: 858px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        #console-frame {
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+
+        #game-container {
+          position: absolute;
+          top: 15px;
+          left: 28px;
+          width: 800px;
+          height: 600px;
+          overflow: hidden;
+        }
+
+        #jump-button {
+          position: absolute;
+          bottom: 13.3%;
+          left: 34.9%;
+          transform: translate(-50%, -50%);
+          font-size: 24px;
+          width: 67px;
+          height: 60px;
+          background-color: #000000;
+          color: #ffffff;
+          border: 1px solid #ffffff;
+          border-radius: 5px;
+          cursor: pointer;
+        }
+
+        #up-button {
+          position: absolute;
+          bottom: 17.3%;
+          right: 30.5%;
+          transform: translate(-50%, -50%);
+          font-size: 24px;
+          width: 75px;
+          height: 75px;
+          background-color: #000000;
+          color: #ffffff;
+          border: 1px solid #ffffff;
+          border-radius: 50%;
+          cursor: pointer;
+        }
+
+        #down-button {
+          position: absolute;
+          bottom: 2%;
+          right: 30.5%;
+          transform: translate(-50%, -50%);
+          font-size: 24px;
+          width: 75px;
+          height: 75px;
+          background-color: #000000;
+          color: #ffffff;
+          border: 1px solid #ffffff;
+          border-radius: 50%;
+          cursor: pointer;
+        }
+    </style>
     <title>Feather Rush</title>
   </head>
   <body>
-    
+    <div id="console-wrapper">
+      <div id="game-container"></div>
+      <img id="console-frame" src="assets/Console.png" alt="Console"></div>
+
+      <button id="jump-button">^</button>
+      <button id="up-button"></button>
+      <button id="down-button"></button>
+
+      <script src="app.js"></script>
+    </div>
   </body>
 </html>

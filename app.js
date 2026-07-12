@@ -3,6 +3,7 @@ let config = {
     renderer: Phaser.AUTO,
     width: 800,
     height: 600,
+    parent: "game-container",
     scale: {
         autoCenter: Phaser.Scale.CENTER_BOTH
     },
@@ -25,9 +26,6 @@ let isMenuOpen = true;
 
 // variable for settings scene
 let isSettingsOpen = false;
-
-// variable for theme scene
-let isThemeOpen = false;
 
 // variable for gameOver / victory scene
 let isGameEndOpen = false;
@@ -60,6 +58,120 @@ let columnTimer;
 let score = 0;
 const targetScore = 1000; // distance to win the game
 let scoreText;
+
+// initializing end game elements
+let gameEndOverlay, gameEndBg, gameEndTitle, playAgainButton, menuButton;
+
+// initializing menu elements
+let menuOverlay, menuBg, menuTitle, newButton, settingsBtn;
+
+// initializing settings elements
+let settingsOverlay, settingsBg, settingsTitle, themeBtn;
+
+// variables for html buttons
+let isJumpPressed = false;
+
+// Add event listeners for the jump button
+const plusButton = document.getElementById("jump-button");
+plusButton.addEventListener('pointerdown', () => {
+    isJumpPressed = true;
+});
+plusButton.addEventListener('pointerup', () => {
+    isJumpPressed = false;
+});
+plusButton.addEventListener('pointerout', () => {
+    isJumpPressed = false;
+});
+
+// initializing functions for buttons
+function startNewGame() {
+    isMenuOpen = false;
+    menuOverlay.visible = false;
+    menuBg.visible = false;
+    menuTitle.visible = false;
+    newButton.visible = false;
+    settingsBtn.visible = false;
+}
+
+function goToSettings() {
+    // ...whatever settingsBtn currently does
+}
+
+function restartGame() {
+    isGameEndOpen = false;
+    gameEndOverlay.visible = false;
+    gameEndTitle.visible = false;
+    gameEndBg.visible = false;
+    playAgainButton.visible = false;
+    menuButton.visible = false;
+    // Reset game state
+    hasLanded = false;
+    hasBumped = false;
+    isGameStarted = false;
+    score = 0;
+    scoreText.text = 'Score: 0 / ' + targetScore;
+    // Reset bird position and velocity
+    bird.setPosition(0, 50);
+    bird.setVelocity(0, 0);
+    bird.body.setAllowGravity(true);
+    // Clear existing columns
+    columns.clear(true, true);
+    // Restart the column timer
+    columnTimer.paused = true;
+}
+
+function goToMainMenu() {
+    isGameEndOpen = false;
+    gameEndOverlay.visible = false;
+    gameEndTitle.visible = false;
+    gameEndBg.visible = false;
+    playAgainButton.visible = false;
+    menuButton.visible = false;
+    // reset menu and settings state
+    isMenuOpen = true;
+    isSettingsOpen = false;
+    menuOverlay.visible = true;
+    menuBg.visible = true;
+    menuTitle.visible = true;
+    newButton.visible = true;
+    settingsBtn.visible = true;
+    // Reset game state
+    hasLanded = false;
+    hasBumped = false;
+    isGameStarted = false;
+    score = 0;
+    scoreText.text = 'Score: 0 / ' + targetScore;
+    // Reset message to player
+    messageToPlayer.text = `Instructions: Press Space Bar to start`;
+    // Reset bird position and velocity
+    bird.setPosition(0, 50);
+    bird.setVelocity(0, 0);
+    bird.body.setAllowGravity(true);
+    // Clear existing columns
+    columns.clear(true, true);
+    // Restart the column timer
+    columnTimer.paused = true;
+}
+
+// add event listeners to up and down buttons
+const upButton = document.getElementById("up-button");
+const downButton = document.getElementById("down-button");
+
+upButton.addEventListener('pointerdown', () => {
+    if (isMenuOpen) {
+        startNewGame();
+    } else if (isGameEndOpen) {
+        restartGame();
+    }
+});
+
+downButton.addEventListener('pointerdown', () => {
+    if (isMenuOpen) {
+        goToSettings();
+    } else if (isGameEndOpen) {
+        goToMainMenu();
+    }
+});
 
 // function to bring in images for our application, such as the background
 function preload() {
@@ -178,66 +290,95 @@ function create() {
     });
 
     // setting the menu scene
-    if (isMenuOpen) {
-        const menuOverlay = this.add.rectangle(0, 0, 800, 600, 0x000000, 0.5).setOrigin(0, 0);
-        const menuBg = this.add.image(0, 0, "menuBg").setOrigin(-0.3, -0.25).setDisplaySize(500, 400);
-        const menuTitle = this.add.text(400, 200, 'Feather Rush', {
-            fontFamily: '"Silkscreen", sans-serif',
-            fontSize: "40px",
-            fill: "#ffffff",
-            backgroundColor: "#000000",
-            padding: { x: 10, y: 5 },
-        }).setOrigin(0.5);
+    menuOverlay = this.add.rectangle(0, 0, 800, 600, 0x000000, 0.5).setOrigin(0, 0);
+    menuBg = this.add.image(0, 0, "menuBg").setOrigin(-0.3, -0.25).setDisplaySize(500, 400);
+    menuTitle = this.add.text(400, 200, 'Feather Rush', {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "40px",
+        fill: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+    }).setOrigin(0.5);
 
-        const newButton = this.add.text(400, 300, 'New Game', {
-            fontFamily: '"Silkscreen", sans-serif',
-            fontSize: "30px",
-            fill: "#ffffff",
-            backgroundColor: "#000000",
-            padding: { x: 10, y: 5 },
-            cursor: "pointer",
-        }).setOrigin(0.5).setInteractive();
+    newButton = this.add.text(400, 300, 'New Game', {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "30px",
+        fill: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+        cursor: "pointer",
+    }).setOrigin(0.5).setInteractive();
 
-        const settingsBtn = this.add.text(400, 350, 'Settings', {
-            fontFamily: '"Silkscreen", sans-serif',
-            fontSize: "30px",
-            fill: "#ffffff",
-            backgroundColor: "#000000",
-            padding: { x: 10, y: 5 },
-            cursor: "pointer",
-        }).setOrigin(0.5).setInteractive();
+    settingsBtn = this.add.text(400, 350, 'Settings', {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "30px",
+        fill: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+        cursor: "pointer",
+    }).setOrigin(0.5).setInteractive();
 
-        const themeBtn = this.add.text(400, 400, 'Theme', {
-            fontFamily: '"Silkscreen", sans-serif',
-            fontSize: "30px",
-            fill: "#ffffff",
-            backgroundColor: "#000000",
-            padding: { x: 10, y: 5 },
-            cursor: "pointer",
-        }).setOrigin(0.5).setInteractive();
+    newButton.on('pointerdown', () => {
+        startNewGame();
+    });
 
-        newButton.on('pointerdown', () => {
-            isMenuOpen = false;
-            menuOverlay.visible = false;
-            menuBg.visible = false;
-            menuTitle.visible = false;
-            newButton.visible = false;
-            settingsBtn.visible = false;
-            themeBtn.visible = false;
-        });
-    }
+    settingsBtn.on('pointerdown', () => {
+        goToSettings();
+    });
+
+    menuOverlay.setVisible(isMenuOpen);
+    menuBg.setVisible(isMenuOpen);
+    menuTitle.setVisible(isMenuOpen);
+    newButton.setVisible(isMenuOpen);
+    settingsBtn.setVisible(isMenuOpen);
+
+// change game end title based on win or lose
+    gameEndOverlay = this.add.rectangle(0, 0, 800, 600, 0x000000, 0.5).setOrigin(0, 0).setAlpha(0.2).setVisible(false);
+    gameEndBg = this.add.image(0, 0, "menuBg").setOrigin(-0.3, -0.25).setDisplaySize(500, 400).setVisible(false);
+
+    gameEndTitle = this.add.text(400, 200, isGameWon ? 'You Won!' : 'Game Over', {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "40px",
+        fill: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+    }).setOrigin(0.5).setVisible(false);
+
+    playAgainButton = this.add.text(400, 300, 'Play Again', {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "30px",
+        fill: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+        cursor: "pointer",
+    }).setOrigin(0.5).setInteractive().setVisible(false);
+
+    menuButton = this.add.text(400, 350, 'Main Menu', {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "30px",
+        fill: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+        cursor: "pointer",
+    }).setOrigin(0.5).setInteractive().setVisible(false);
+
+    menuButton.on('pointerdown', () => {
+        goToMainMenu();
+    });
+
+    playAgainButton.on('pointerdown', () => {
+        restartGame();
+    });
 }
-
-
 
 //  function will be used to update the "bird" object in the game.
 function update() {
 
-    if (cursors.space.isDown && isMenuOpen) {
+    if ((cursors.space.isDown || isJumpPressed) && isMenuOpen) {
         return;
     }
-    
-    if(cursors.space.isDown && !isGameStarted) {
+
+    if((cursors.space.isDown || isJumpPressed) && !isGameStarted) {
         isGameStarted = true;
         columnTimer.paused = false;
         messageToPlayer.text = 'Instructions: Press the "^" button to stay\n uprightAnd don\'t hit the columns or ground';
@@ -247,7 +388,7 @@ function update() {
         bird.setVelocityY(-160);
     }
 
-    if(cursors.up.isDown && !hasLanded && !hasBumped && isGameStarted && score < targetScore) {
+    if((cursors.up.isDown || isJumpPressed) && !hasLanded && !hasBumped && isGameStarted && score < targetScore) {
         bird.setVelocityY(-160);
     }
 
@@ -278,104 +419,20 @@ function update() {
         messageToPlayer.text = 'Oh no! You crashed!';
     }
 
-    // change game end title based on win or lose
-    if (isGameEndOpen) {
-        const gameEndOverlay = this.add.rectangle(0, 0, 800, 600, 0x000000, 0.5).setOrigin(0, 0).setAlpha(0.2);
-        const gameEndBg = this.add.image(0, 0, "menuBg").setOrigin(-0.3, -0.25).setDisplaySize(500, 400);
-
-        const gameEndTitle = this.add.text(400, 200, isGameWon ? 'You Won!' : 'Game Over', {
-            fontFamily: '"Silkscreen", sans-serif',
-            fontSize: "40px",
-            fill: "#ffffff",
-            backgroundColor: "#000000",
-            padding: { x: 10, y: 5 },
-        }).setOrigin(0.5);
-
-        const playAgainButton = this.add.text(400, 300, 'Play Again', {
-            fontFamily: '"Silkscreen", sans-serif',
-            fontSize: "30px",
-            fill: "#ffffff",
-            backgroundColor: "#000000",
-            padding: { x: 10, y: 5 },
-            cursor: "pointer",
-        }).setOrigin(0.5).setInteractive();
-
-        const menuButton = this.add.text(400, 350, 'Main Menu', {
-            fontFamily: '"Silkscreen", sans-serif',
-            fontSize: "30px",
-            fill: "#ffffff",
-            backgroundColor: "#000000",
-            padding: { x: 10, y: 5 },
-            cursor: "pointer",
-        }).setOrigin(0.5).setInteractive();
-
-        menuButton.on('pointerdown', () => {
-            isGameEndOpen = false;
-            gameEndOverlay.visible = false;
-            gameEndTitle.visible = false;
-            playAgainButton.visible = false;
-            menuButton.visible = false;
-
-            // reset menu and settings state
-            isMenuOpen = true;
-            isSettingsOpen = false;
-            isThemeOpen = false;
-
-            // Reset game state
-            hasLanded = false;
-            hasBumped = false;
-            isGameStarted = false;
-            score = 0;
-            scoreText.text = 'Score: 0 / ' + targetScore;
-
-            // Reset bird position and velocity
-            bird.setPosition(0, 50);
-            bird.setVelocity(0, 0);
-            bird.body.setAllowGravity(true);
-
-            // Clear existing columns
-            columns.clear(true, true);
-
-            // Restart the column timer
-            columnTimer.paused = true;
-        });
-
-        playAgainButton.on('pointerdown', () => {
-            isGameEndOpen = false;
-            gameEndOverlay.visible = false;
-            gameEndTitle.visible = false;
-            playAgainButton.visible = false;
-            menuButton.visible = false;
-
-            // reset menu and settings state
-            isMenuOpen = true;
-            isSettingsOpen = false;
-            isThemeOpen = false;
-
-            // Reset game state
-            hasLanded = false;
-            hasBumped = false;
-            isGameStarted = false;
-            score = 0;
-            scoreText.text = 'Score: 0 / ' + targetScore;
-
-            // Reset bird position and velocity
-            bird.setPosition(0, 50);
-            bird.setVelocity(0, 0);
-            bird.body.setAllowGravity(true);
-
-            // Clear existing columns
-            columns.clear(true, true);
-
-            // Restart the column timer
-            columnTimer.paused = true;
-        });
-    }
-
     // Performance Cleanup: Clean up columns that left the screen
     columns.children.iterate(function (column) {
         if (column && column.x < -50) {
             column.destroy();
         }
     });
+
+    if (isGameEndOpen) {
+        // columns should not be visible when game ends
+        columns.setVisible(false);
+        gameEndOverlay.setVisible(true);
+        gameEndBg.setVisible(true);
+        gameEndTitle.setText(isGameWon ? 'You Won!' : 'Game Over').setVisible(true);
+        playAgainButton.setVisible(true);
+        menuButton.setVisible(true);
+    }
 }
