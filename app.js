@@ -63,7 +63,7 @@ let scoreText;
 let gameEndOverlay, gameEndBg, gameEndTitle, playAgainButton, menuButton;
 
 // initializing menu elements
-let menuOverlay, menuBg, menuTitle, newButton, settingsBtn, scoreChangeText, increaseScoreButton, decreaseScoreButton, scoreNumber;
+let menuOverlay, menuBg, menuTitle, newButton, settingsBtn, scoreChangeText, increaseScoreButton, decreaseScoreButton, scoreNumber, backButton;
 
 // initializing settings elements
 let settingsOverlay, settingsBg, settingsTitle;
