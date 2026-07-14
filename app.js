@@ -321,7 +321,7 @@ function create() {
         }
     );
 
-    Phaser.Display.Align.In.BottomCenter(messageToPlayer, background, 0, 50);
+    messageToPlayer.setPosition(400, 550).setOrigin(0.5, 0.5);
 
     // create a timer to spawn columns every 2 seconds, but start paused
     columnTimer = this.time.addEvent({
