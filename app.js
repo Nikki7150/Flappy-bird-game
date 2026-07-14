@@ -56,17 +56,17 @@ let columnTimer;
 
 // variable to keep track of score
 let score = 0;
-const targetScore = 1000; // distance to win the game
+let targetScore = 1000; // distance to win the game
 let scoreText;
 
 // initializing end game elements
 let gameEndOverlay, gameEndBg, gameEndTitle, playAgainButton, menuButton;
 
 // initializing menu elements
-let menuOverlay, menuBg, menuTitle, newButton, settingsBtn;
+let menuOverlay, menuBg, menuTitle, newButton, settingsBtn, scoreChangeText, increaseScoreButton, decreaseScoreButton, scoreNumber;
 
 // initializing settings elements
-let settingsOverlay, settingsBg, settingsTitle, themeBtn;
+let settingsOverlay, settingsBg, settingsTitle;
 
 // variables for html buttons
 let isJumpPressed = false;
@@ -94,7 +94,17 @@ function startNewGame() {
 }
 
 function goToSettings() {
-    // ...whatever settingsBtn currently does
+    isMenuOpen = false;
+    menuOverlay.visible = false;
+    isSettingsOpen = true;
+    settingsOverlay.visible = true;
+    settingsBg.visible = true;
+    settingsTitle.visible = true;
+    scoreChangeText.visible = true;
+    increaseScoreButton.visible = true;
+    decreaseScoreButton.visible = true;
+    scoreNumber.visible = true;
+    backButton.visible = true;
 }
 
 function restartGame() {
@@ -153,6 +163,18 @@ function goToMainMenu() {
     columnTimer.paused = true;
 }
 
+function closeSettings() {
+    isSettingsOpen = false;
+    settingsOverlay.visible = false;
+    settingsBg.visible = false;
+    settingsTitle.visible = false;
+    scoreChangeText.visible = false;
+    increaseScoreButton.visible = false;
+    decreaseScoreButton.visible = false;
+    scoreNumber.visible = false;
+    backButton.visible = false;
+}
+
 // add event listeners to up and down buttons
 const upButton = document.getElementById("up-button");
 const downButton = document.getElementById("down-button");
@@ -176,7 +198,7 @@ downButton.addEventListener('pointerdown', () => {
 // function to bring in images for our application, such as the background
 function preload() {
     this.load.image("woodBg", "assets/wood-bg.jpg");
-    this.load.image("menuBg", "assets/menu-bg.jpeg");
+    this.load.image("menuBg", "assets/menu-bg.png");
     this.load.image("background", "assets/background.png");
     this.load.image("road", "assets/road.png");
     this.load.image("column", "assets/column.png");
@@ -220,20 +242,6 @@ function create() {
     // this.physics makes a call to arcade physics system in phaser to allow physics simulation to roads 
     const roads = this.physics.add.staticGroup();
 
-    // topColumns are static
-    /*const topColumns = this.physics.add.staticGroup({
-        key: "column", 
-        repeat: 1,
-        setXY: { x: 200, y: 0, stepX: 300 },
-    });
-
-    // bottomColumns are static
-    const bottomColumns = this.physics.add.staticGroup({
-        key: "column", 
-        repeat: 1,
-        setXY: { x: 350, y: 400, stepX: 300 },
-    });*/
-
     const road = roads.create(400, 568, "road").setScale(2).refreshBody();
 
     columns = this.physics.add.group();
@@ -248,13 +256,6 @@ function create() {
     // set hasLanded to true when bird land on road
     this.physics.add.overlap(bird, road, () => (hasLanded = true), null, this);
     this.physics.add.collider(bird, road);
-
-    // make bird stop moving when hits a column
-    /*this.physics.add.overlap(bird, topColumns, () => (hasBumped = true), null, this);
-    this.physics.add.overlap(bird, bottomColumns, () => (hasBumped = true), null, this);
-
-    this.physics.add.collider(bird, topColumns);
-    this.physics.add.collider(bird, bottomColumns);*/
 
     this.physics.add.collider(bird, columns, () => (hasBumped = true), null, this);
 
@@ -369,12 +370,88 @@ function create() {
     playAgainButton.on('pointerdown', () => {
         restartGame();
     });
+
+// setting the settings scene
+    settingsOverlay = this.add.rectangle(0, 0, 800, 600, 0x000000, 0.5).setOrigin(0, 0).setVisible(false);
+    settingsBg = this.add.image(0, 0, "menuBg").setOrigin(-0.3, -0.25).setDisplaySize(500, 400).setVisible(false);
+
+    settingsTitle = this.add.text(400, 200, 'Settings', {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "40px",
+        fill: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+    }).setOrigin(0.5).setVisible(false);
+
+    scoreChangeText = this.add.text(400, 280, 'Change Score', {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "30px",
+        fill: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+    }).setOrigin(0.5).setVisible(false);
+
+    increaseScoreButton = this.add.text(300, 360, '+', {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "30px",
+        fill: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+        cursor: "pointer",
+    }).setOrigin(0.5).setInteractive().setVisible(false);
+
+    decreaseScoreButton = this.add.text(500, 360, '-', {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "30px",
+        fill: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+        cursor: "pointer",
+    }).setOrigin(0.5).setInteractive().setVisible(false);
+
+    scoreNumber = this.add.text(400, 360, targetScore, {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "30px",
+        fill: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+    }).setOrigin(0.5).setVisible(false);
+
+    increaseScoreButton.on('pointerdown', () => {
+        targetScore += 100;
+        scoreNumber.text = targetScore;
+    });
+
+    decreaseScoreButton.on('pointerdown', () => {
+        if (targetScore > 600) {
+            targetScore -= 100;
+            scoreNumber.text = targetScore;
+        }
+    });
+
+    backButton = this.add.text(400, 410, 'Back', {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "30px",
+        fill: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+        cursor: "pointer",
+    }).setOrigin(0.5).setInteractive().setVisible(false);
+
+    backButton.on('pointerdown', () => {
+        closeSettings();
+        goToMainMenu();
+    });
 }
 
 //  function will be used to update the "bird" object in the game.
 function update() {
 
     if ((cursors.space.isDown || isJumpPressed) && isMenuOpen) {
+        return;
+    }
+
+    if ((cursors.space.isDown || isJumpPressed) && isSettingsOpen) {
         return;
     }
 
@@ -427,7 +504,6 @@ function update() {
     });
 
     if (isGameEndOpen) {
-        // columns should not be visible when game ends
         columns.setVisible(false);
         gameEndOverlay.setVisible(true);
         gameEndBg.setVisible(true);
@@ -436,3 +512,5 @@ function update() {
         menuButton.setVisible(true);
     }
 }
+
+
