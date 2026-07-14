@@ -21,6 +21,39 @@ let config = {
     },
 };
 
+let currentTheme = 'city'; // default
+
+const themes = {
+    city: {
+        backgroundKey: 'background',
+        backgroundPath: 'assets/background.png',
+        backgroundScale: 1,
+        roadKey: 'road',
+        roadPath: 'assets/road.png',
+        roadScale: 2,
+        columnTopKey: 'column',
+        columnTopPath: 'assets/column.png',
+        columnBottomKey: 'column',
+        columnBottomPath: 'assets/column.png',
+        columnScale: { x: 1, y: 1 },
+        scoreColor: '#000000',
+    },
+    cave: {
+        backgroundKey: 'cave-background',
+        backgroundPath: 'assets/cave-bg.png',
+        backgroundScale: 0.65,
+        roadKey: 'cave-road',
+        roadPath: 'assets/cave-road.png',
+        roadScale: 0.45,
+        columnTopKey: 'cave-column-2',
+        columnTopPath: 'assets/cave-column-2.png',
+        columnBottomKey: 'cave-column-1',
+        columnBottomPath: 'assets/cave-column-1.png',
+        columnScale: { x: 0.3, y: 0.65 },
+        scoreColor: '#ffffff',
+    },
+};
+
 // variable for menu scene
 let isMenuOpen = true;
 
@@ -63,7 +96,7 @@ let scoreText;
 let gameEndOverlay, gameEndBg, gameEndTitle, playAgainButton, menuButton;
 
 // initializing menu elements
-let menuOverlay, menuBg, menuTitle, newButton, settingsBtn, scoreChangeText, increaseScoreButton, decreaseScoreButton, scoreNumber, backButton;
+let menuOverlay, menuBg, menuTitle, newButton, settingsBtn, scoreChangeText, increaseScoreButton, decreaseScoreButton, scoreNumber, backButton, changeTheme, theme;
 
 // initializing settings elements
 let settingsOverlay, settingsBg, settingsTitle;
@@ -105,6 +138,8 @@ function goToSettings() {
     decreaseScoreButton.visible = true;
     scoreNumber.visible = true;
     backButton.visible = true;
+    changeTheme.visible = true;
+    theme.visible = true;
 }
 
 function restartGame() {
@@ -173,6 +208,8 @@ function closeSettings() {
     decreaseScoreButton.visible = false;
     scoreNumber.visible = false;
     backButton.visible = false;
+    changeTheme.visible = false;
+    theme.visible = false;
 }
 
 // add event listeners to up and down buttons
@@ -199,9 +236,11 @@ downButton.addEventListener('pointerdown', () => {
 function preload() {
     this.load.image("woodBg", "assets/wood-bg.jpg");
     this.load.image("menuBg", "assets/menu-bg.png");
-    this.load.image("background", "assets/background.png");
-    this.load.image("road", "assets/road.png");
-    this.load.image("column", "assets/column.png");
+
+    this.load.image(themes[currentTheme].backgroundKey, themes[currentTheme].backgroundPath);
+    this.load.image(themes[currentTheme].roadKey, themes[currentTheme].roadPath);
+    this.load.image(themes[currentTheme].columnTopKey, themes[currentTheme].columnTopPath);
+    this.load.image(themes[currentTheme].columnBottomKey, themes[currentTheme].columnBottomPath);
     this.load.spritesheet("bird", "assets/bird.png", {
         frameWidth: 64,
         frameHeight: 96,
@@ -218,8 +257,8 @@ function spawnColumns() {
     // random y for the gap center
     const randomY = Phaser.Math.Between(maxHeight, minHeight); 
 
-    const topColumn = columns.create(850, randomY - gap / 2, 'column').setOrigin(0.5, 1);
-    const bottomColumn = columns.create(850, randomY + gap / 2, 'column').setOrigin(0.5, 0);
+    const topColumn = columns.create(850, randomY - gap / 2, themes[currentTheme].columnTopKey).setOrigin(0.5, 1).setScale(themes[currentTheme].columnScale.x, themes[currentTheme].columnScale.y);
+    const bottomColumn = columns.create(850, randomY + gap / 2, themes[currentTheme].columnBottomKey).setOrigin(0.5, 0).setScale(themes[currentTheme].columnScale.x, themes[currentTheme].columnScale.y);
 
     topColumn.body.setVelocityX(-200);
     bottomColumn.body.setVelocityX(-200);
@@ -237,12 +276,12 @@ function spawnColumns() {
 // function to generate elements that will appear in our game, such as images that were brought in from the preload() function
 function create() {
     // setOrigin() specifies that we want upper left corner of background to be positioned at (0, 0)
-    const background = this.add.image(0, 0, "background").setOrigin(0, 0);
+    const background = this.add.image(0, 0, themes[currentTheme].backgroundKey).setOrigin(0, 0).setScale(themes[currentTheme].backgroundScale);
 
     // this.physics makes a call to arcade physics system in phaser to allow physics simulation to roads 
     const roads = this.physics.add.staticGroup();
 
-    const road = roads.create(400, 568, "road").setScale(2).refreshBody();
+    const road = roads.create(400, 568, themes[currentTheme].roadKey).setScale(themes[currentTheme].roadScale).refreshBody();
 
     columns = this.physics.add.group();
 
@@ -383,35 +422,35 @@ function create() {
         padding: { x: 10, y: 5 },
     }).setOrigin(0.5).setVisible(false);
 
-    scoreChangeText = this.add.text(400, 280, 'Change Score', {
+    scoreChangeText = this.add.text(300, 280, 'Change Score', {
         fontFamily: '"Silkscreen", sans-serif',
-        fontSize: "30px",
+        fontSize: "25px",
         fill: "#ffffff",
         backgroundColor: "#000000",
         padding: { x: 10, y: 5 },
     }).setOrigin(0.5).setVisible(false);
 
-    increaseScoreButton = this.add.text(300, 360, '+', {
+    increaseScoreButton = this.add.text(450, 280, '+', {
         fontFamily: '"Silkscreen", sans-serif',
-        fontSize: "30px",
+        fontSize: "20px",
         fill: "#ffffff",
         backgroundColor: "#000000",
         padding: { x: 10, y: 5 },
         cursor: "pointer",
     }).setOrigin(0.5).setInteractive().setVisible(false);
 
-    decreaseScoreButton = this.add.text(500, 360, '-', {
+    decreaseScoreButton = this.add.text(606, 280, '-', {
         fontFamily: '"Silkscreen", sans-serif',
-        fontSize: "30px",
+        fontSize: "20px",
         fill: "#ffffff",
         backgroundColor: "#000000",
         padding: { x: 10, y: 5 },
         cursor: "pointer",
     }).setOrigin(0.5).setInteractive().setVisible(false);
 
-    scoreNumber = this.add.text(400, 360, targetScore, {
+    scoreNumber = this.add.text(530, 280, targetScore, {
         fontFamily: '"Silkscreen", sans-serif',
-        fontSize: "30px",
+        fontSize: "25px",
         fill: "#ffffff",
         backgroundColor: "#000000",
         padding: { x: 10, y: 5 },
@@ -429,7 +468,7 @@ function create() {
         }
     });
 
-    backButton = this.add.text(400, 410, 'Back', {
+    backButton = this.add.text(400, 445, 'Back', {
         fontFamily: '"Silkscreen", sans-serif',
         fontSize: "30px",
         fill: "#ffffff",
@@ -442,6 +481,39 @@ function create() {
         closeSettings();
         goToMainMenu();
     });
+
+    changeTheme = this.add.text(300, 360, 'Change Theme', {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "25px",
+        fill: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+        cursor: "pointer",
+    }).setOrigin(0.5).setInteractive().setVisible(false);
+
+    theme = this.add.text(520, 360, 'City Theme >', {
+        fontFamily: '"Silkscreen", sans-serif',
+        fontSize: "20px",
+        fill: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+        cursor: "pointer",
+    }).setOrigin(0.5).setInteractive().setVisible(false);
+
+    theme.on('pointerdown', () => {
+        if (theme.text === 'City Theme >') {
+            currentTheme = 'cave';
+            theme.setText('Cave Theme >');
+        } else {
+            currentTheme = 'city';
+            theme.setText('City Theme >');
+        }
+
+        restartGame();
+        this.scene.restart();
+        goToMainMenu();
+    });
+
 }
 
 //  function will be used to update the "bird" object in the game.
