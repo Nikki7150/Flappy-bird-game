@@ -36,7 +36,10 @@ const themes = {
         columnBottomKey: 'column',
         columnBottomPath: 'assets/column.png',
         columnScale: { x: 1, y: 1 },
-        scoreColor: '#000000',
+        scoreColor: '#ffffff',
+        scoreBgColor: '#000000',
+        groundKey: 'ground',
+        groundY: 505,
     },
     cave: {
         backgroundKey: 'cave-background',
@@ -50,7 +53,11 @@ const themes = {
         columnBottomKey: 'cave-column-1',
         columnBottomPath: 'assets/cave-column-1.png',
         columnScale: { x: 0.3, y: 0.65 },
-        scoreColor: '#ffffff',
+        scoreColor: '#000000',
+        scoreBgColor: '#ffffff',
+        groundKey: 'cave-ground',
+        groundY: 568,
+        
     },
 };
 
@@ -281,7 +288,11 @@ function create() {
     // this.physics makes a call to arcade physics system in phaser to allow physics simulation to roads 
     const roads = this.physics.add.staticGroup();
 
-    const road = roads.create(400, 568, themes[currentTheme].roadKey).setScale(themes[currentTheme].roadScale).refreshBody();
+    const road = roads.create(400, 568, themes[currentTheme].roadKey).setScale(themes[currentTheme].roadScale);
+
+    const ground = this.physics.add.staticImage(400, themes[currentTheme].groundY, null);
+    ground.setDisplaySize(800, 5).setAlpha(0);
+    ground.refreshBody();
 
     columns = this.physics.add.group();
 
@@ -293,8 +304,8 @@ function create() {
     bird.setCollideWorldBounds(true);
 
     // set hasLanded to true when bird land on road
-    this.physics.add.overlap(bird, road, () => (hasLanded = true), null, this);
-    this.physics.add.collider(bird, road);
+    this.physics.add.overlap(bird, ground, () => (hasLanded = true), null, this);
+    this.physics.add.collider(bird, ground);
 
     this.physics.add.collider(bird, columns, () => (hasBumped = true), null, this);
 
@@ -305,8 +316,8 @@ function create() {
         {
             fontFamily: '"Silkscreen", sans-serif',
             fontSize: "20px",
-            color: "white",
-            backgroundColor: "black",
+            color: themes[currentTheme].scoreColor,
+            backgroundColor: themes[currentTheme].scoreBgColor,
         }
     );
 
@@ -325,7 +336,7 @@ function create() {
     scoreText = this.add.text(540, 10, 'Score: 0 / ' + targetScore, {
         fontFamily: '"Silkscreen", sans-serif',
         fontSize: "20px",
-        fill: "#000000",
+        fill: themes[currentTheme].scoreBgColor,
         padding: { x: 10, y: 5 },
     });
 
@@ -491,7 +502,7 @@ function create() {
         cursor: "pointer",
     }).setOrigin(0.5).setInteractive().setVisible(false);
 
-    theme = this.add.text(520, 360, 'City Theme >', {
+    theme = this.add.text(520, 360, currentTheme === 'city' ? 'Cave Theme >' : 'City Theme >', {
         fontFamily: '"Silkscreen", sans-serif',
         fontSize: "20px",
         fill: "#ffffff",
@@ -501,12 +512,10 @@ function create() {
     }).setOrigin(0.5).setInteractive().setVisible(false);
 
     theme.on('pointerdown', () => {
-        if (theme.text === 'City Theme >') {
+        if (currentTheme === 'city') {
             currentTheme = 'cave';
-            theme.setText('Cave Theme >');
-        } else {
+        } else if (currentTheme === 'cave') {
             currentTheme = 'city';
-            theme.setText('City Theme >');
         }
 
         restartGame();
